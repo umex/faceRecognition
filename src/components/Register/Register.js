@@ -22,7 +22,8 @@ class Register extends React.Component {
     }
 
     onRegisterSignIn = () => { 
-        fetch('http://localhost:3001/register', {
+        console.log(this.state);
+        fetch('https://arcane-stream-58672.herokuapp.com/register', {
             method: 'post',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({
@@ -33,12 +34,12 @@ class Register extends React.Component {
         })
         .then(response => response.json())
         .then(user =>{
-            if(user){
+            if(user.id){
                 this.props.loadUser(user);
                 this.props.onRouteChange('home');
             }
         })
-        
+        .catch(err =>console.log('err:' , err))
     }
 
 

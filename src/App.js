@@ -47,6 +47,7 @@ class App extends React.Component {
   }
 
   loadUser = (data) => {
+    console.log('data',data);
     this.setState({user: {
       id:data.id,
       name:data.name,
@@ -85,7 +86,7 @@ class App extends React.Component {
   onButtonSubmit = () => {
     console.log('input', this.state.input);
     this.setState({imageURL: this.state.input});
-      fetch('http://localhost:3001/imageurl', {
+      fetch('https://arcane-stream-58672.herokuapp.com/imageurl', {
         method: 'post',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
@@ -96,7 +97,7 @@ class App extends React.Component {
       .then(response =>{
         console.log('response: ',response);
         if(response && response!== 'Unable to call API'){
-          fetch('http://localhost:3001/image', {
+          fetch('https://arcane-stream-58672.herokuapp.com/image', {
             method: 'put',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({
