@@ -8,11 +8,9 @@ import FaceRecognition from './components/FaceRecognition/FaceRecognition.js';
 import SignIn from './components/SignIn/SignIn.js';
 import Register from './components/Register/Register.js';
 import Particles from 'react-particles-js';
-import Clarifai from 'clarifai';
 
-const app = new Clarifai.App({
-  apiKey: '98fdb1a211054a4383f51622c6da990a'
- });
+
+
 
 
 const particleOptions ={
@@ -27,24 +25,25 @@ const particleOptions ={
   }
 }
 
+const initalState = {
+  input: '',
+  imageURL: '',
+  box:{},
+  route: 'signin',
+  isSignedIn:false,
+  user: {
+    id:'',
+    name:'',
+    email:'',
+    entries: 0,
+    joined: ''
+  }
+}
 
 class App extends React.Component {
   constructor(){
     super();
-    this.state = {
-      input: '',
-      imageURL: '',
-      box:{},
-      route: 'signin',
-      isSignedIn:false,
-      user: {
-        id:'',
-        name:'',
-        email:'',
-        entries: 0,
-        joined: ''
-      }
-    }
+    this.state = initalState;
   }
 
   loadUser = (data) => {
@@ -57,15 +56,8 @@ class App extends React.Component {
     }})  
   }
 
-  /*
-  componentDidMount(){
-    fetch('http://localhost:3001')
-    .then(response => response.json())
-    .then(data => console.log(data))
-  }
-  */
-
   calculateFaceLocation = (data) =>{
+    console.log(data);
     const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
     const image = document.getElementById('inputimage');
     const width = Number(image.width);
@@ -80,7 +72,6 @@ class App extends React.Component {
   }
 
   displayFaceBox = (box) => {
-    console.log(box);
     this.setState({box:box});
   }
 
@@ -90,12 +81,21 @@ class App extends React.Component {
     this.setState({input:event.target.value});
   }
   
+
   onButtonSubmit = () => {
-    console.log('userid:', this.state.user.id);
+    console.log('input', this.state.input);
     this.setState({imageURL: this.state.input});
-    app.models.predict(Clarifai.FACE_DETECT_MODEL , this.state.input)
+      fetch('http://localhost:3001/imageurl', {
+        method: 'post',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({
+            input: this.state.input
+        })
+      })
+      .then(response => response.json())
       .then(response =>{
-        if(response){
+        console.log('response: ',response);
+        if(response && response!== 'Unable to call API'){
           fetch('http://localhost:3001/image', {
             method: 'put',
             headers: {'Content-Type':'application/json'},
@@ -106,23 +106,18 @@ class App extends React.Component {
           .then(response => response.json())
           .then(count => {
             this.setState(Object.assign(this.state.user, { entries: count}))
-            /*
-            this.setState({
-              users: {
-                entires: count
-              }
-            })  
-            */
           })
+          .catch(err =>console.log);
         }
         this.displayFaceBox(this.calculateFaceLocation(response))
       })
       .catch(err =>console.log(err));
   }
 
+
   onRouteChange = (route) => {
     if(route==='signout'){
-      this.setState({isSignedIn:false})
+      this.setState(initalState)
     }else if(route==='home'){
       this.setState({isSignedIn:true})
     }
