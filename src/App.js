@@ -75,7 +75,7 @@ class App extends React.Component {
 
   }
 
-  displayFaceBox = (boxes) => {
+  displayFaceBoxes = (boxes) => {
     this.setState({boxes:boxes});
   }
 
@@ -113,7 +113,7 @@ class App extends React.Component {
           })
           .catch(err =>console.log);
         }
-        this.displayFaceBox(this.calculateFaceLocations(response))
+        this.displayFaceBoxes(this.calculateFaceLocations(response))
       })
       .catch(err =>console.log(err));
   }
