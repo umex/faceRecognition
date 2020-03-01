@@ -28,7 +28,7 @@ const particleOptions ={
 const initalState = {
   input: '',
   imageURL: '',
-  box:{},
+  boxes: [],
   route: 'signin',
   isSignedIn:false,
   user: {
@@ -57,23 +57,26 @@ class App extends React.Component {
     }})  
   }
 
-  calculateFaceLocation = (data) =>{
+  calculateFaceLocations = (data) =>{
     console.log(data);
-    const clarifaiFace = data.outputs[0].data.regions[0].region_info.bounding_box;
-    const image = document.getElementById('inputimage');
-    const width = Number(image.width);
-    const height = Number(image.height);
-    console.log(width,height);
-    return {
-      leftCol: clarifaiFace.left_col * width,
-      topRow: clarifaiFace.top_row * height,
-      rightCol: width - (clarifaiFace.right_col * width),
-      bottomRow: height - (clarifaiFace.bottom_row * height)
-    }
+    return data.outputs[0].data.regions.map(face => {
+      const clarifaiFace = face.region_info.bounding_box;
+      const image = document.getElementById('inputimage');
+      const width = Number(image.width);
+      const height = Number(image.height);
+      console.log(width,height);
+      return {
+        leftCol: clarifaiFace.left_col * width,
+        topRow: clarifaiFace.top_row * height,
+        rightCol: width - (clarifaiFace.right_col * width),
+        bottomRow: height - (clarifaiFace.bottom_row * height)
+      }
+    });
+
   }
 
-  displayFaceBox = (box) => {
-    this.setState({box:box});
+  displayFaceBox = (boxes) => {
+    this.setState({boxes:boxes});
   }
 
   onInputChange = (event) => {
@@ -86,7 +89,7 @@ class App extends React.Component {
   onButtonSubmit = () => {
     console.log('input', this.state.input);
     this.setState({imageURL: this.state.input});
-      fetch('https://arcane-stream-58672.herokuapp.com/imageurl', {
+      fetch('http://localhost:3001/imageurl', { // https://arcane-stream-58672.herokuapp.com
         method: 'post',
         headers: {'Content-Type':'application/json'},
         body: JSON.stringify({
@@ -97,7 +100,7 @@ class App extends React.Component {
       .then(response =>{
         console.log('response: ',response);
         if(response && response!== 'Unable to call API'){
-          fetch('https://arcane-stream-58672.herokuapp.com/image', {
+          fetch('http://localhost:3001/image', { // https://arcane-stream-58672.herokuapp.com
             method: 'put',
             headers: {'Content-Type':'application/json'},
             body: JSON.stringify({
@@ -110,7 +113,7 @@ class App extends React.Component {
           })
           .catch(err =>console.log);
         }
-        this.displayFaceBox(this.calculateFaceLocation(response))
+        this.displayFaceBox(this.calculateFaceLocations(response))
       })
       .catch(err =>console.log(err));
   }
@@ -140,7 +143,7 @@ class App extends React.Component {
               <Logo/>
               <Rank name={this.state.user.name} entries={this.state.user.entries}/>
               <ImageLinkForm onInputChange = {this.onInputChange} onButtonSubmit = {this.onButtonSubmit} />
-              <FaceRecognition imageUrl={this.state.imageURL} box={this.state.box} />
+              <FaceRecognition imageUrl={this.state.imageURL} boxes={this.state.boxes} />
             </div> 
           : (
             this.state.route === 'signin' ||  this.state.route === 'signout'
