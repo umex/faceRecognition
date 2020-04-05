@@ -1,5 +1,5 @@
 import React from 'react';
-
+import './SignIn.css'
 class SignIn extends React.Component {
     constructor(props){
         super(props);
@@ -14,6 +14,11 @@ class SignIn extends React.Component {
     onPasswordChange = (event) =>{
         this.setState({signInPassword: event.target.value});
     }
+    
+    saveAuthTokenInSession = (token) => {
+        //to pride iz browserja (browser API)
+        window.sessionStorage.setItem('token', token);
+    }
 
     onSubmitSignIn = () => { 
         fetch('http://localhost:3001/signin', { // https://arcane-stream-58672.herokuapp.com
@@ -25,12 +30,25 @@ class SignIn extends React.Component {
             })
         })
         .then(response => response.json())
-        .then(user  =>{
-            if (user.id) {
-                this.props.loadUser(user);
-                this.props.onRouteChange('home');
+        .then(data =>{
+            if (data.userid && data.success === 'true') {
+                this.saveAuthTokenInSession(data.token);
+                fetch(`http://localhost:3001/profile/${data.userid}`, {
+                    method: 'GET',
+                    headers: {
+                      'Content-Type': 'application/json',
+                      'Authorization': data.token
+                    }
+                  })
+                  .then(response => response.json())
+                  .then(user => {
+                    if (user && user.email) {
+                      this.props.loadUser(user)
+                      this.props.onRouteChange('home');
+                    }
+                  })
             }
-        })
+        }).catch(console.log)
         
     }
 
